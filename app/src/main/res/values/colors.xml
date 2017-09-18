@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="slipknot">#2F3333</color>
+    <color name="korn">#42464C</color>
+    <color name="cinderella">#FF4081</color>
+    <color name="metallica">#277467</color>
+    <color name="deff_leppard">#23A299</color>
+    <color name="guns_n_roses">#5FA9A0</color>
+    <color name="iron_maiden">#1EA29A</color>
+    <color name="ac_dc">#A5DAD7</color>
+    <color name="ozzy_osbourne">#E6F3EB</color>
+    <color name="kiss">#F5F9E8</color>
+    <color name="aerosmith">#9AA52D</color>
+    <color name="pearl_jam">#AAB24A</color>
+    <color name="cranberries">#A2BD31</color>
+    <color name="keane">#93C120</color>
+    <color name="oasis">#C6D36B</color>
+    <color name="green_day">#EDF2D0</color>
+    <color name="black_sabbath">#222222</color>
+    <color name="radiohead">#526B76</color>
+    <color name="the_strokes">#DFDFDF</color>
+    <color name="nirvana">#8C9FA9</color>
+    <color name="blur">#CDD5D9</color>
+    <color name="alice_cooper">#f4f4f4</color>
+    <color name="whitesnake">#ffffff</color>
+    <color name="primary">#12A19B</color>
+    <color name="secondary">#93C120</color>
+    <color name="danger">#f53d3d</color>
+    <color name="warning">#FE8402</color>
+    <color name="dark">#222222</color>
+    <color name="light">#f4f4f4</color>
+    <color name="transparent">#00ffffff</color>
+    <color name="colorAccent">@android:color/white</color>
+    <color name="colorPrimary">#12A19B</color>
+    <color name="colorPrimaryDark">#93C120</color>
+</resources>
