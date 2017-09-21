@@ -3,8 +3,10 @@ package com.fixit.fixitworker;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
@@ -19,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,9 +31,32 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fixit.fixitworker.Helpers.LoggingRequestInterceptor;
+import com.fixit.fixitworker.Helpers.Utils;
+import com.fixit.fixitworker.Models.LogIn;
+import com.fixit.fixitworker.Models.Token;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.support.HttpAccessor;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -61,11 +87,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private String endpoint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
+
+        //Getting endpoint from configuration file
+        endpoint = Utils.getConfigValue(this, "SERVER_URL");
+
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -185,8 +217,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
+            new HttpRequestTask(new LogIn(email, password), this).execute();
+            //mAuthTask = new UserLoginTask(email, password);
+            //mAuthTask.execute((Void) null);
         }
     }
 
@@ -288,6 +321,58 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         int ADDRESS = 0;
         int IS_PRIMARY = 1;
+    }
+
+    private class HttpRequestTask extends AsyncTask<Void, Void, Token> {
+
+        private LogIn logIn;
+        private Context context;
+
+        public HttpRequestTask(LogIn logIn, Context context) {
+            this.logIn = logIn;
+            this.context = context;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        @Override
+        protected Token doInBackground(Void... params) {
+            try {
+                String url =  endpoint + "/api/token-auth/";
+
+                //Getting JSON of object
+                ObjectMapper mapper = new ObjectMapper();
+                String json_logIn = mapper.writeValueAsString(logIn);
+
+                //Adding headers
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.set("Content-Type", "application/json");
+                httpHeaders.set("Accept", "application/json");
+                httpHeaders.set("Accept-Charset", "utf-8");
+
+                HttpEntity<String> entity = new HttpEntity<String>(json_logIn, httpHeaders);
+
+                RestTemplate restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory()));
+                restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+                List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
+                interceptors.add(new LoggingRequestInterceptor());
+                restTemplate.setInterceptors(interceptors);
+
+                //Send request
+                Token token = restTemplate.postForObject(url, entity, Token.class);
+                return token;
+            } catch (Exception e) {
+                Log.e("MainActivity", e.getMessage(), e);
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Token token) {
+            Log.d("","");
+            Toast.makeText(context, token.getToken(), Toast.LENGTH_LONG);
+        }
+
     }
 
     /**
